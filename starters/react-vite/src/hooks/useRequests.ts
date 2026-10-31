@@ -1,11 +1,11 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { listRequests } from "../api";
 import type { HelpdeskRequest, Site, Change } from "../types";
 import { toSiteLocalDateStr } from "../lib/timezone";
 import type { BoardFilters } from "./useUrlState";
 
 export function useRequests(filters: BoardFilters, siteMap: Map<number, Site>) {
-  const [data, setData] = useState<HelpdeskRequest[]>([]);
+  const [rawRequests, setRawRequests] = useState<HelpdeskRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -16,7 +16,6 @@ export function useRequests(filters: BoardFilters, siteMap: Map<number, Site>) {
       if (r.merged_into_id !== null) return false;
 
       if (filters.site && String(r.site_id) !== filters.site) return false;
-
       if (filters.statuses.length && !filters.statuses.includes(r.status)) return false;
 
       const site = siteMap.get(r.site_id);
@@ -27,7 +26,7 @@ export function useRequests(filters: BoardFilters, siteMap: Map<number, Site>) {
       const [td, tm, ty] = filters.to.split("/");
       return localDate >= `${fy}-${fm}-${fd}` && localDate <= `${ty}-${tm}-${td}`;
     },
-    [filters, siteMap]
+    [filters.site, filters.statuses, filters.from, filters.to, siteMap]
   );
 
   useEffect(() => {
@@ -53,49 +52,47 @@ export function useRequests(filters: BoardFilters, siteMap: Map<number, Site>) {
     }
 
     fetchAll()
-      .then((raw) => {
-        const filtered = raw.filter(isEligible);
-        sortData(filtered);
+      .then((items) => {
+        setRawRequests(items);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [filters, siteMap, isEligible]);
-
-  const sortData = (items: HelpdeskRequest[]) => {
-    const sorted = [...items].sort((a, b) => {
-      const av = filters.sort === "due_on" ? (a.due_on ?? "") : a.created_at;
-      const bv = filters.sort === "due_on" ? (b.due_on ?? "") : b.created_at;
-      return filters.dir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
-    });
-    setData(sorted);
-  };
+  }, [filters.from, filters.to, siteMap]);
 
   const applyLiveChanges = useCallback(
     (changes: Change[]) => {
-      setData((prev) => {
-        let currentMap = new Map<number, HelpdeskRequest>(prev.map((r) => [r.id, r]));
-
+      setRawRequests((prev) => {
+        const map = new Map<number, HelpdeskRequest>(prev.map((r) => [r.id, r]));
         for (const ch of changes) {
           if ((ch.type === "request.created" || ch.type === "request.updated") && ch.request) {
-            const req = ch.request;
-            if (isEligible(req)) {
-              currentMap.set(req.id, req);
-            } else {
-              currentMap.delete(req.id);
-            }
+            map.set(ch.request.id, ch.request);
           }
         }
-
-        const nextList = Array.from(currentMap.values());
-        return nextList.sort((a, b) => {
-          const av = filters.sort === "due_on" ? (a.due_on ?? "") : a.created_at;
-          const bv = filters.sort === "due_on" ? (b.due_on ?? "") : b.created_at;
-          return filters.dir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
-        });
+        return Array.from(map.values());
       });
     },
-    [filters, isEligible]
+    []
   );
+
+  const data = useMemo(() => {
+    const filtered = rawRequests.filter(isEligible);
+
+    return filtered.sort((a, b) => {
+      if (filters.sort === "due_on") {
+        if (!a.due_on && !b.due_on) return 0;
+        if (!a.due_on) return 1;
+        if (!b.due_on) return -1;
+
+        return filters.dir === "asc"
+          ? a.due_on.localeCompare(b.due_on)
+          : b.due_on.localeCompare(a.due_on);
+      }
+
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return filters.dir === "asc" ? dateA - dateB : dateB - dateA;
+    });
+  }, [rawRequests, isEligible, filters.sort, filters.dir]);
 
   return { data, loading, error, applyLiveChanges };
 }

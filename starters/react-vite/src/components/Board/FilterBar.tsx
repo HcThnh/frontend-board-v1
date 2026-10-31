@@ -11,7 +11,6 @@ interface Props {
 export function FilterBar({ filters, onChange, sites, statuses }: Props) {
   return (
     <div className="filter-bar" role="search" aria-label="Filter requests">
-      {/* Date range */}
       <label className="filter-label">
         From
         <input type="date" value={ddmmToInput(filters.from)}
@@ -23,7 +22,6 @@ export function FilterBar({ filters, onChange, sites, statuses }: Props) {
           onChange={e => onChange({ to: inputToDDMM(e.target.value) })} />
       </label>
 
-      {/* Site */}
       <label className="filter-label">
         Site
         <select value={filters.site} onChange={e => onChange({ site: e.target.value })}>
@@ -32,40 +30,45 @@ export function FilterBar({ filters, onChange, sites, statuses }: Props) {
         </select>
       </label>
 
-      {/* Status chips */}
-      <div className="filter-label" role="group" aria-label="Status filter">
-        <span>Status</span>
-        <div className="chip-group">
-          {statuses.filter(s => s.value !== "canceled").map(s => {
-            const active = filters.statuses.includes(s.value);
-            return (
-              <button key={s.value}
-                className={`chip ${active ? "chip--active" : ""}`}
-                aria-pressed={active}
-                onClick={() => onChange({
-                  statuses: active
-                    ? filters.statuses.filter(x => x !== s.value)
-                    : [...filters.statuses, s.value]
-                })}>
+      <label className="filter-label">
+        Status
+        <select
+          value={filters.statuses.length === 1 ? filters.statuses[0] : ""}
+          onChange={(e) => {
+            const val = e.target.value;
+            onChange({
+              statuses: val
+                ? [val]
+                : statuses
+                    .filter((s) => s.value !== "canceled")
+                    .map((s) => s.value),
+            });
+          }}
+        >
+          <option value="">All Statuses</option>
+          {statuses
+            .filter((s) => s.value !== "canceled")
+            .map((s) => (
+              <option key={s.value} value={s.value}>
                 {s.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+              </option>
+            ))}
+        </select>
+      </label>
 
-      {/* Sort */}
       <label className="filter-label">
         Sort by
-        <select value={`${filters.sort}_${filters.dir}`}
-          onChange={e => {
-            const [sort, dir] = e.target.value.split("_") as [BoardFilters["sort"], BoardFilters["dir"]];
+        <select
+          value={`${filters.sort}:${filters.dir}`}
+          onChange={(e) => {
+            const [sort, dir] = e.target.value.split(":") as [BoardFilters["sort"], BoardFilters["dir"]];
             onChange({ sort, dir });
-          }}>
-          <option value="created_at_desc">Created (newest)</option>
-          <option value="created_at_asc">Created (oldest)</option>
-          <option value="due_on_asc">Due Date ↑</option>
-          <option value="due_on_desc">Due Date ↓</option>
+          }}
+        >
+          <option value="created_at:desc">Created (newest)</option>
+          <option value="created_at:asc">Created (oldest)</option>
+          <option value="due_on:asc">Due Date ↑</option>
+          <option value="due_on:desc">Due Date ↓</option>
         </select>
       </label>
     </div>

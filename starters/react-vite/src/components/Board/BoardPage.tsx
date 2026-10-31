@@ -7,6 +7,9 @@ import { FilterBar } from "./FilterBar";
 import { RequestTable } from "./RequestTable";
 import { DetailModal } from "../Detail/DetailModal";
 import { SyncIndicator } from "../ui/SyncIndicator";
+import { ErrorAlert } from "../ui/ErrorAlert";
+import { TableSkeleton } from "../ui/LoadingSkeleton";
+import { EmptyState } from "../ui/EmptyState";
 import type { Change } from "../../types";
 
 export function BoardPage() {
@@ -18,7 +21,6 @@ export function BoardPage() {
   const handleLiveChanges = useCallback(
     (changes: Change[]) => {
       applyLiveChanges(changes);
-
       for (const ch of changes) {
         if (ch.type === "staff.updated" && ch.staff) {
           staffMap.set(ch.staff.id, ch.staff.name);
@@ -32,7 +34,19 @@ export function BoardPage() {
     onChanges: handleLiveChanges,
   });
 
-  if (metaError) return <div className="error-state">Failed to load app data: {metaError}</div>;
+  const handleResetFilters = () => {
+    const today = new Date();
+    const from = new Date(today);
+    from.setDate(today.getDate() - 30);
+    const fmt = (d: Date) =>
+      `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+    setFilters({
+      from: fmt(from),
+      to: fmt(today),
+      site: "",
+      statuses: ["pending", "processing", "complete"],
+    });
+  };
 
   return (
     <main className="board-page">
@@ -45,14 +59,19 @@ export function BoardPage() {
         />
       </header>
 
+      {(metaError || error) && (
+        <ErrorAlert
+          error={metaError || error || "Failed to communicate with service"}
+          onRetry={forceSync}
+        />
+      )}
+
       <FilterBar filters={filters} onChange={setFilters} sites={sites} statuses={statuses} />
 
       {loading || metaLoading ? (
-        <div className="loading-state" aria-live="polite">Loading requests…</div>
-      ) : error ? (
-        <div className="error-state" role="alert">{error}</div>
+        <TableSkeleton rows={8} />
       ) : data.length === 0 ? (
-        <div className="empty-state">No requests found. Try widening the date range.</div>
+        <EmptyState onResetFilters={handleResetFilters} />
       ) : (
         <RequestTable
           requests={data}
@@ -60,6 +79,14 @@ export function BoardPage() {
           staffMap={staffMap}
           statuses={statuses}
           onSelect={(id) => setSelectedRequestId(id)}
+          sortField={filters.sort}
+          sortDir={filters.dir}
+          onSortChange={(field) =>
+            setFilters({
+              sort: field,
+              dir: filters.sort === field && filters.dir === "asc" ? "desc" : "asc",
+            })
+          }
         />
       )}
 

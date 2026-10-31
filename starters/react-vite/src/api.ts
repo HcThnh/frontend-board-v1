@@ -6,12 +6,14 @@ const BASE = (import.meta.env.HELPDESK_URL ?? "").replace(/\/$/, "");
 const TOKEN = import.meta.env.HELPDESK_TOKEN ?? "";
 
 export class ApiError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-    public retryAfterSeconds: number | null = null,
-  ) {
+  status: number;
+  retryAfterSeconds?: number;
+
+  constructor(message: string, status: number, retryAfter?: number) {
     super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.retryAfterSeconds = retryAfter;
   }
 }
 
@@ -28,7 +30,12 @@ export async function get<T>(path: string, params: Record<string, string | numbe
   if (!response.ok) {
     const body = (await response.json().catch(() => ({}))) as { error?: string };
     const retryAfter = response.headers.get("Retry-After");
-    throw new ApiError(response.status, body.error ?? response.statusText, retryAfter ? Number(retryAfter) : null);
+    
+    throw new ApiError(
+      body.error ?? response.statusText,
+      response.status,
+      retryAfter ? Number(retryAfter) : undefined
+    );
   }
   return (await response.json()) as T;
 }

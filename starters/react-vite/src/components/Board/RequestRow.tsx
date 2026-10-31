@@ -20,22 +20,29 @@ export function RequestRow({ request, site, assigneeName, statusLabel, onSelect 
         .find((p) => p.type === "timeZoneName")?.value ?? ""
     : "";
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onSelect(request.id);
+    }
+  };
+
   return (
     <tr
-      style={{ cursor: "pointer" }}
+      className="table-row"
       tabIndex={0}
       role="button"
-      aria-label={`Open request ${request.ref}: ${request.title}`}
+      aria-label={`Ticket ${request.ref}: ${request.title}. Status: ${statusLabel}`}
       onClick={() => onSelect(request.id)}
-      onKeyDown={(e) => e.key === "Enter" && onSelect(request.id)}
+      onKeyDown={handleKeyDown}
     >
-      <td>{site?.name ?? `Site ${request.site_id}`}</td>
-      <td>{request.ref}</td>
-      <td>{request.title}</td>
+      <td className="col-site">{site?.name ?? `Site ${request.site_id}`}</td>
+      <td className="font-mono">{request.ref}</td>
+      <td className="col-title">{request.title}</td>
       <td><PriorityBadge priority={request.priority} /></td>
       <td><StatusBadge label={statusLabel} /></td>
       <td>{assigneeName || "Unassigned"}</td>
-      <td>{request.due_on ? `${request.due_on} (${tz})` : "—"}</td>
+      <td className="font-mono">{request.due_on ? `${request.due_on} (${tz})` : "—"}</td>
       <td><OverdueBadge overdue={overdue} /></td>
     </tr>
   );
