@@ -3,3 +3,56 @@ body { margin: 0; padding: 16px; }
 table { border-collapse: collapse; width: 100%; }
 th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #d9e2ec; }
 .muted { color: #627d98; }
+
+.board-page { padding: 1.5rem 2rem; }
+.board-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+.board-header h1 { font-size: 1.5rem; font-weight: 700; color: var(--color-text); }
+
+/* ── Filter Bar ── */
+.filter-bar { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; margin-bottom: 1.5rem;
+  background: var(--color-surface); padding: 1rem 1.25rem; border-radius: 10px;
+  border: 1px solid var(--color-border); }
+.filter-label { display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem;
+  font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.filter-label input, .filter-label select {
+  background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 6px;
+  color: var(--color-text); padding: 6px 10px; font-size: 0.875rem; }
+
+/* ── Chips ── */
+.chip-group { display: flex; gap: 6px; }
+.chip { padding: 4px 12px; border-radius: 20px; border: 1px solid var(--color-border);
+  background: transparent; color: var(--color-text-muted); cursor: pointer; font-size: 0.8rem;
+  transition: all 0.15s; }
+.chip--active { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
+
+/* ── Table ── */
+.request-table { width: 100%; border-collapse: collapse; }
+.request-table th { text-align: left; padding: 10px 12px; font-size: 0.75rem; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--color-text-muted); border-bottom: 1px solid var(--color-border);
+  white-space: nowrap; }
+.table-row { cursor: pointer; transition: background 0.1s; }
+.table-row:hover, .table-row:focus { background: var(--color-hover); outline: none; }
+.table-row td { padding: 12px; font-size: 0.875rem; border-bottom: 1px solid var(--color-border); }
+
+/* ── Badges ── */
+.badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+.badge--red    { background: #3d1a1a; color: #ff7b7b; }
+.badge--orange { background: #3d2a0f; color: #ffab4f; }
+.badge--yellow { background: #3d330a; color: #ffd666; }
+.badge--blue   { background: #0d2340; color: #58a6ff; }
+.badge--green  { background: #0d2d1a; color: #56d364; }
+.badge--grey   { background: #1c2128; color: #8b949e; }
+
+/* ── States ── */
+.loading-state, .empty-state, .error-state { padding: 3rem; text-align: center;
+  color: var(--color-text-muted); border: 1px dashed var(--color-border); border-radius: 12px; }
+.error-state { color: #ff7b7b; border-color: #3d1a1a; }
+.text-muted { color: var(--color-text-muted); }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .board-page { padding: 1rem; }
+  .request-table th:nth-child(1),
+  .request-table td:nth-child(1) { display: none; } /* Ẩn cột Site trên mobile */
+  .request-table { display: block; overflow-x: auto; }
+}

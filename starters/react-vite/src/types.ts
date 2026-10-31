@@ -51,3 +51,18 @@ export interface Page<T> {
   total?: number;
   has_more?: boolean;
 }
+
+export interface StatusInfo {
+  value: string;
+  label: string;
+}
+
+export interface Change {
+  seq: number;
+  type: "request.created" | "request.updated" | "event.created" | "staff.updated";
+  at: string;
+  request?: HelpdeskRequest;
+  request_id?: number;
+  event?: RequestEvent;
+  staff?: Staff;
+}
