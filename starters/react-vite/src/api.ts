@@ -51,3 +51,12 @@ export const getChanges = (cursor?: string, limit = 500) =>
     "/v1/changes",
     { cursor, limit }
   );
+
+export const getRequestDetail = (id: number) =>
+  get<{ data: HelpdeskRequest }>(`/v1/requests/${id}`);
+
+export const listRequestEvents = (id: number, page = 1, per_page = 100) =>
+  get<{ data: RequestEvent[]; total_pages?: number }>(
+    `/v1/requests/${id}/events`,
+    { page, per_page }
+  );

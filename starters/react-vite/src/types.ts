@@ -33,12 +33,13 @@ export interface HelpdeskRequest {
 
 export interface RequestEvent {
   id: number;
-  status: Status;
-  at: number; // Unix seconds
+  request_id: number;
+  at: number;
   actor_id: number | null;
-  actor_name: string; // the name at the time; System events have actor_id null
-  assignee_name: string | null;
-  due_at: string | null; // "DD/MM/YYYY HH:MM", site local
+  status: Status | null;
+  priority: Priority | null;
+  assignee_id: number | null;
+  due_at: string | null;
   note: string | null;
   reverts_id: number | null;
 }

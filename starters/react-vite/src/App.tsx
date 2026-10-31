@@ -1,10 +1,7 @@
-import { useState } from "react";
 import { configured } from "./api";
 import { BoardPage } from "./components/Board/BoardPage";
 
 export default function App() {
-  const [_selectedId, setSelectedId] = useState<number | null>(null);
-
   if (!configured()) {
     return (
       <p>
@@ -14,9 +11,5 @@ export default function App() {
     );
   }
 
-  return (
-    <BoardPage
-      onSelectRequest={(id) => setSelectedId(id)}
-    />
-  );
+  return <BoardPage />;
 }

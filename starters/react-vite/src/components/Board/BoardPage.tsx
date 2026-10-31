@@ -1,13 +1,16 @@
+import { useState } from "react";
 import { useAppData } from "../../hooks/useAppData";
 import { useRequests } from "../../hooks/useRequests";
 import { useUrlState } from "../../hooks/useUrlState";
 import { FilterBar } from "./FilterBar";
 import { RequestTable } from "./RequestTable";
+import { DetailModal } from "../Detail/DetailModal";
 
-export function BoardPage({ onSelectRequest }: { onSelectRequest: (id: number) => void }) {
+export function BoardPage() {
   const { sites, siteMap, staffMap, statuses, loading: metaLoading, error: metaError } = useAppData();
   const [filters, setFilters] = useUrlState();
   const { data, loading, error } = useRequests(filters, siteMap);
+  const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
 
   if (metaError) return <div className="error-state">Failed to load app data: {metaError}</div>;
 
@@ -31,9 +34,17 @@ export function BoardPage({ onSelectRequest }: { onSelectRequest: (id: number) =
           siteMap={siteMap}
           staffMap={staffMap}
           statuses={statuses}
-          onSelect={onSelectRequest}
+          onSelect={(id) => setSelectedRequestId(id)}
         />
       )}
+
+      <DetailModal
+        requestId={selectedRequestId}
+        onClose={() => setSelectedRequestId(null)}
+        siteMap={siteMap}
+        staffMap={staffMap}
+        statuses={statuses}
+      />
     </main>
   );
 }
